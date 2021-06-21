@@ -9,12 +9,13 @@ import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
 import { KernelMessage, Kernel, Session } from '@jupyterlab/services';
 
-import { IChangedArgs } from '@jupyterlab/coreutils';
+import { IChangedArgs, PathExt } from '@jupyterlab/coreutils';
 
 import { ISessionContext } from '@jupyterlab/apputils';
 
-function session_changed(
+function sessionChanged(
   documentManager: IDocumentManager,
+  paths: JupyterFrontEnd.IPaths,
   session: Session.ISessionConnection | null
 ): void {
   if (session) {
@@ -27,7 +28,21 @@ function session_changed(
         ) {
           for (const payload of args.msg.content.payload || []) {
             if (payload['source'] === 'edit_magic') {
-              documentManager.openOrReveal(String(payload['filename']));
+              let path = String(payload['filename']);
+              if (path[0] === '/') {
+                path = path.replace(
+                  paths.directories.serverRoot[0] === '~'
+                    ? new RegExp(
+                        '.*?' +
+                          paths.directories.serverRoot
+                            .substring(1)
+                            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                      )
+                    : paths.directories.serverRoot,
+                  ''
+                );
+              }
+              documentManager.openOrReveal(PathExt.removeSlash(path));
             }
           }
         }
@@ -42,16 +57,18 @@ function session_changed(
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-edit-magic:plugin',
   autoStart: true,
-  requires: [IDocumentManager, INotebookTracker],
+  requires: [IDocumentManager, JupyterFrontEnd.IPaths, INotebookTracker],
   activate: (
     app: JupyterFrontEnd,
     documentManager: IDocumentManager,
+    paths: JupyterFrontEnd.IPaths,
     notebookTracker: INotebookTracker
   ) => {
+    console.log('jupyterlab-edit-magic activated.');
     notebookTracker.widgetAdded.connect(
       async (sender: any, nbPanel: NotebookPanel) => {
         await nbPanel.sessionContext.ready;
-        session_changed(documentManager, nbPanel.sessionContext.session);
+        sessionChanged(documentManager, paths, nbPanel.sessionContext.session);
         nbPanel.sessionContext.sessionChanged.connect(
           (
             sender: ISessionContext,
@@ -61,7 +78,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
               'session'
             >
           ) => {
-            session_changed(documentManager, args.newValue);
+            sessionChanged(documentManager, paths, args.newValue);
           }
         );
       }

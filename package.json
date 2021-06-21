@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-edit-magic",
-  "version": "0.2.0",
+  "version": "0.2.18",
   "description": "An edit_magic handler for JupyterLab",
   "keywords": [
     "jupyter",
@@ -28,7 +28,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "lab-install": "yarn pack -f jupyterlab-edit-magic.tgz && jupyter-labextension install --no-build jupyterlab-edit-magic.tgz && sleep 5 && jupyter-lab build",
+    "lab-install": "yarn pack -f jupyterlab-edit-magic.tgz && jupyter-labextension install --no-build jupyterlab-edit-magic.tgz && sleep 5 && jupyter-lab build --dev-build",
     "lint": "eslint . --ext .ts --fix",
     "lint-check": "eslint . --ext .ts",
     "prepack": "yarn run build"
