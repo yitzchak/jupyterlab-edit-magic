@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-edit-magic",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "An edit_magic handler for JupyterLab",
   "keywords": [
     "jupyter",
